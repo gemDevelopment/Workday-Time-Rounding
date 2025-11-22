@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>6-Minute Clock Calculator</title>
+    <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for PWA feel and aesthetics */
+        :root {
+            --primary: #4f46e5; /* Indigo 600 - Kept for border/accents */
+            --background: #1f2937; /* Gray 800 */
+            --card-bg: #374151; /* Gray 700 */
+            --text-light: #f3f4f6;
+            --text-dark: #1f2937;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            color: var(--text-light);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 480px;
+            width: 100%;
+            padding: 1.5rem;
+            background-color: var(--card-bg);
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+        }
+        input[type="time"], input[type="number"], button {
+            transition: all 0.2s ease-in-out;
+        }
+        input[type="time"], input[type="number"] {
+            background-color: #4b5563; /* Gray 600 */
+            border: 1px solid #6b7280;
+            color: var(--text-light);
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            width: 100%;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        
+        /* --- Button Styling Fixes --- */
+        
+        /* Calculate Button (Emerald Green) */
+        button[type="submit"] {
+            /* Force reset browser appearance */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            cursor: pointer;
+            
+            /* Apply Solid Color and remove conflicting background-image */
+            background-color: #059669; /* Emerald 600 */
+            background-image: none; 
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border: none;
+        }
+        button[type="submit"]:hover {
+            background-color: #10b981; /* Emerald 500 */
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            transform: translateY(-2px);
+        }
+        button[type="submit"]:active {
+            background-color: #047857; /* Emerald 700 */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transform: translateY(1px);
+        }
+        
+        /* Set Now Button (Indigo) */
+        #setNowButton {
+            background-color: #4f46e5; /* Indigo 600 */
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            border: none;
+        }
+        #setNowButton:hover {
+            background-color: #6366f1; /* Indigo 500 */
+            transform: translateY(-1px);
+        }
+        #setNowButton:active {
+            background-color: #4338ca; /* Indigo 700 */
+            transform: translateY(0.5px);
+        }
+
+        /* General layout for input fields */
+        .result-card {
+            background-color: #111827; /* Gray 900 */
+            padding: 1rem;
+            border-radius: 1rem;
+            border-left: 5px solid var(--primary);
+        }
+        
+        /* Mode Switch Styling */
+        .mode-switch button {
+            transition: background-color 0.2s, color 0.2s;
+            border: none;
+            outline: none;
+        }
+
+        @media (min-width: 768px) {
+            body {
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1 class="text-3xl font-extrabold text-center mb-6">Workday Clock Calculator</h1>
+        <p class="text-center text-sm mb-8 text-gray-300">
+            Calculates your required time using a **6-minute (0.1 hour) rounding system**.
+        </p>
+        
+        <!-- Mode Switch --><div class="flex bg-gray-600 rounded-lg p-1 mb-6 text-sm font-semibold mode-switch">
+            <button type="button" id="modeForward" class="flex-1 py-2 rounded-lg">
+                Calculate Clock Out
+            </button>
+            <button type="button" id="modeReverse" class="flex-1 py-2 rounded-lg">
+                Calculate Clock In
+            </button>
+        </div>
+
+
+        <form id="calculator-form" class="space-y-6">
+            <!-- Input Field 1 (Clock In Time / Clock Out Time) -->
+            <div id="inputField1">
+                <label for="timeInput" class="block text-sm font-medium mb-2" id="labelTimeInput">Clock In Time (Actual)</label>
+                <div class="flex space-x-3 items-center">
+                    <input type="time" id="timeInput" required value="08:00" class="flex-grow">
+                    <button type="button" id="setNowButton" class="text-sm flex-shrink-0">
+                        Set Now
+                    </button>
+                </div>
+            </div>
+
+            <!-- Target Duration (Unchanged) -->
+            <div>
+                <label for="targetHours" class="block text-sm font-medium mb-2">Target Work Duration (Hours)</label>
+                <input type="number" id="targetHours" step="0.01" min="0.01" required value="8.00">
+                <p class="text-xs text-gray-400 mt-1">This is the net time you need to work, excluding any clocked-out breaks.</p>
+            </div>
+
+            <button type="submit" id="mainCalcButton" class="w-full">Calculate Clock Out</button>
+        </form>
+
+        <!-- Results Display --><div id="results" class="mt-8 space-y-4 hidden">
+            <h2 class="text-2xl font-bold border-b border-gray-600 pb-2 mb-4">Your Times</h2>
+
+            <div class="result-card space-y-3">
+                <p class="flex justify-between items-center">
+                    <span class="text-indigo-300 font-semibold" id="labelRoundedInput">Rounded Clock In:</span>
+                    <span id="roundedInput" class="text-lg font-mono">--:-- --</span>
+                </p>
+                
+                <p class="flex justify-between items-center">
+                    <span class="text-indigo-300 font-semibold" id="labelTargetResult">Target Clock Out:</span>
+                    <span id="targetResult" class="text-lg font-mono text-green-400 font-extrabold">--:-- --</span>
+                </p>
+
+                <!-- New Clock Out Window --><div class="pt-2 border-t border-gray-700">
+                    <p class="text-sm font-medium text-gray-400 mb-1" id="labelResultWindow">Clock Out Window (Actual Time):</p>
+                    <p id="timeWindow" class="text-center text-xl font-mono text-yellow-300 font-bold">--:-- -- to --:-- --</p>
+                    <p class="text-xs text-gray-400 mt-1 text-center italic" id="labelWindowMessage">Clocking out within this window achieves the 'Target Clock Out' time.</p>
+                </div>
+            </div>
+
+            <div class="text-xs text-gray-400 pt-4">
+                <p>*Rounded times are calculated to the nearest 6 minutes (0.1 hours).</p>
+            </div>
+        </div>
+
+        <!-- Message Box for Errors --><div id="messageBox" class="mt-4 p-3 bg-red-800 text-white rounded-lg hidden"></div>
+
+    </div>
+
+    <!-- PWA Manifest & Service Worker --><link rel="manifest" href="data:application/json;base64,eyJpY29ucyI6IFt7InNyYyI6ICJodHRwczovL3BsYWNlaG9sZC5jby8xOTJ4MTkyLzQ2NGVlN3wvZjNmNGY2P3RleHQ9Q0wiLCJzaXplcyI6ICIxOTJ4MTkyIiwidHlwZSI6ICJpbWFnZS9wbmcifSx7InNyYyI6ICJodHRwczovL3BsYWNlaG9sZC5jby81MTJ4NTEyLzQ2NGVlN3wvZjNmNGY2P3RleHQ9Q0wiLCJzaXplcyI6ICI1MTJ4NTEyIiwidHlwZSI6ICJpbWFnZS9wbmcifV0sIm5hbWUiOiAiNi1NaW51dGUgQ2FsYyIsICJzaG9ydF9uYW1lIjogIjYgTWluIENhbGMiLCAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwgImJhY2tncm91bmRfY29sb3IiOiAiIzFmMjkzNyIsICJ0aGVtZV9jb2xvciI6ICIjNGY0NmU1In0=">
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM References ---
+            const form = document.getElementById('calculator-form');
+            const resultsDiv = document.getElementById('results');
+            const messageBox = document.getElementById('messageBox');
+            
+            // Input Fields
+            const timeInput = document.getElementById('timeInput');
+            const targetHoursInput = document.getElementById('targetHours');
+            
+            // Labels and Buttons
+            const labelTimeInput = document.getElementById('labelTimeInput');
+            const labelRoundedInput = document.getElementById('labelRoundedInput');
+            const labelTargetResult = document.getElementById('labelTargetResult');
+            const labelResultWindow = document.getElementById('labelResultWindow');
+            const labelWindowMessage = document.getElementById('labelWindowMessage');
+            const mainCalcButton = document.getElementById('mainCalcButton');
+            const setNowButton = document.getElementById('setNowButton');
+            const modeForwardButton = document.getElementById('modeForward');
+            const modeReverseButton = document.getElementById('modeReverse');
+            
+            // Result Spans
+            const roundedInputSpan = document.getElementById('roundedInput');
+            const targetResultSpan = document.getElementById('targetResult');
+            const timeWindowSpan = document.getElementById('timeWindow');
+
+            // --- State ---
+            let isForwardMode = true; // true = Calculate Clock Out (default), false = Calculate Clock In
+
+            // --- Utility Functions ---
+
+            function showMessage(message, type = 'error') {
+                messageBox.textContent = message;
+                messageBox.classList.remove('hidden', 'bg-red-800', 'bg-green-800');
+                if (type === 'error') {
+                    messageBox.classList.add('bg-red-800');
+                } else {
+                    messageBox.classList.add('bg-green-800');
+                }
+                resultsDiv.classList.add('hidden');
+            }
+
+            function hideMessage() {
+                messageBox.classList.add('hidden');
+            }
+
+            /**
+             * Rounds the minutes of a time to the nearest 6-minute interval.
+             * Implements standard mathematical rounding (0.5 rounds up).
+             * @param {number} minutes - Minutes past the hour (0-59).
+             * @returns {number} The minutes rounded to the nearest multiple of 6.
+             */
+            function roundMinutesTo6(minutes) {
+                return Math.round(minutes / 6) * 6;
+            }
+
+            function formatTime12(totalMinutes) {
+                // Adjust minutes for potential negative results (e.g., subtracting duration past midnight)
+                const totalMinutesOfDay = (totalMinutes % (24 * 60) + (24 * 60)) % (24 * 60); 
+                let h = Math.floor(totalMinutesOfDay / 60);
+                const m = totalMinutesOfDay % 60;
+
+                const period = h >= 12 ? 'PM' : 'AM';
+                h = h % 12;
+                h = h === 0 ? 12 : h;
+
+                const hoursStr = String(h);
+                const minutesStr = String(m).padStart(2, '0');
+
+                return `${hoursStr}:${minutesStr} ${period}`;
+            }
+
+            function timeStringToMinutes(timeString) {
+                const [hours, minutes] = timeString.split(':').map(Number);
+                return (hours * 60) + minutes;
+            }
+
+            // --- Calculation Functions ---
+
+            /**
+             * Mode 1: Calculates Clock Out Time based on Clock In Time.
+             */
+            function calculateClockOut(clockInTimeString, targetHours) {
+                const totalShiftMinutesToAdd = Math.round(targetHours * 60);
+                let actualInMinutes = timeStringToMinutes(clockInTimeString);
+                
+                // 1. Calculate Rounded Clock In Time
+                let actualInMinutesOfHour = actualInMinutes % 60;
+                let actualInHoursOfDay = Math.floor(actualInMinutes / 60);
+
+                let roundedInMinutesOfHour = roundMinutesTo6(actualInMinutesOfHour);
+                
+                // Handle rounding up to the next hour (e.g., 58 mins rounds to 60/00 next hour)
+                let hoursAdjustment = Math.floor(roundedInMinutesOfHour / 60);
+                actualInHoursOfDay += hoursAdjustment;
+                roundedInMinutesOfHour %= 60;
+
+                let roundedInTotalMinutes = (actualInHoursOfDay * 60) + roundedInMinutesOfHour;
+                roundedInputSpan.textContent = formatTime12(roundedInTotalMinutes); // Rounded Clock In
+
+                // 2. Calculate Raw Clock Out Time
+                let rawOutTotalMinutes = roundedInTotalMinutes + totalShiftMinutesToAdd;
+                
+                // 3. Calculate Rounded Clock Out Time (Target Result)
+                let rawOutMinutesOfHour = rawOutTotalMinutes % 60;
+                let rawOutHoursOfDay = Math.floor(rawOutTotalMinutes / 60);
+
+                let roundedOutMinutesOfHour = roundMinutesTo6(rawOutMinutesOfHour);
+                
+                hoursAdjustment = Math.floor(roundedOutMinutesOfHour / 60);
+                rawOutHoursOfDay += hoursAdjustment;
+                roundedOutMinutesOfHour %= 60;
+
+                let roundedOutTotalMinutes = (rawOutHoursOfDay * 60) + roundedOutMinutesOfHour;
+                targetResultSpan.textContent = formatTime12(roundedOutTotalMinutes); // Target Clock Out
+
+                // 4. Calculate Clock Out Window (Actual Time)
+                // Window: RoundedOutTime - 3 minutes to RoundedOutTime + 2 minutes
+                const windowStartMinutes = roundedOutTotalMinutes - 3;
+                const windowEndMinutes = roundedOutTotalMinutes + 2;
+
+                timeWindowSpan.textContent = `${formatTime12(windowStartMinutes)} to ${formatTime12(windowEndMinutes)}`;
+                labelWindowMessage.textContent = "Clocking out within this window achieves the 'Target Clock Out' time.";
+                
+                resultsDiv.classList.remove('hidden');
+            }
+
+            /**
+             * Mode 2: Calculates Clock In Time based on Clock Out Time.
+             */
+            function calculateClockIn(clockOutTimeString, targetHours) {
+                const totalShiftMinutesToSubtract = Math.round(targetHours * 60);
+                let actualOutMinutes = timeStringToMinutes(clockOutTimeString);
+
+                // 1. Calculate Rounded Clock Out Time (Input)
+                let actualOutMinutesOfHour = actualOutMinutes % 60;
+                let actualOutHoursOfDay = Math.floor(actualOutMinutes / 60);
+
+                let roundedOutMinutesOfHour = roundMinutesTo6(actualOutMinutesOfHour);
+                
+                let hoursAdjustment = Math.floor(roundedOutMinutesOfHour / 60);
+                actualOutHoursOfDay += hoursAdjustment;
+                roundedOutMinutesOfHour %= 60;
+
+                let roundedOutTotalMinutes = (actualOutHoursOfDay * 60) + roundedOutMinutesOfHour;
+                roundedInputSpan.textContent = formatTime12(roundedOutTotalMinutes); // Rounded Clock Out (Input)
+
+                // 2. Calculate Raw Clock In Time
+                let rawInTotalMinutes = roundedOutTotalMinutes - totalShiftMinutesToSubtract;
+                
+                // 3. Calculate Rounded Clock In Time (Target Result) - This must be the rounded time that the employee needs to hit
+                let rawInMinutesOfHour = rawInTotalMinutes % 60;
+                let rawInHoursOfDay = Math.floor(rawInTotalMinutes / 60);
+                
+                // Correct for negative minutes (since we used modulo on a potentially negative number)
+                if (rawInMinutesOfHour < 0) {
+                    rawInMinutesOfHour += 60;
+                    rawInHoursOfDay -= 1;
+                }
+                
+                let roundedInMinutesOfHour = roundMinutesTo6(rawInMinutesOfHour);
+
+                // Handle rounding up/down effects on the hour
+                hoursAdjustment = Math.floor(roundedInMinutesOfHour / 60);
+                rawInHoursOfDay += hoursAdjustment;
+                roundedInMinutesOfHour %= 60;
+
+                let roundedInTotalMinutes = (rawInHoursOfDay * 60) + roundedInMinutesOfHour;
+                targetResultSpan.textContent = formatTime12(roundedInTotalMinutes); // Target Clock In
+
+                // 4. Calculate Clock In Window (Actual Time)
+                // Window: RoundedInTime - 2 minutes to RoundedInTime + 3 minutes
+                const windowStartMinutes = roundedInTotalMinutes - 2;
+                const windowEndMinutes = roundedInTotalMinutes + 3;
+
+                timeWindowSpan.textContent = `${formatTime12(windowStartMinutes)} to ${formatTime12(windowEndMinutes)}`;
+                labelWindowMessage.textContent = "Clocking in within this window achieves the 'Target Clock In' time.";
+
+                resultsDiv.classList.remove('hidden');
+            }
+
+            // --- UI/Mode Handling ---
+
+            function updateUIForMode() {
+                // 1. Update Mode Buttons Styling
+                if (isForwardMode) {
+                    modeForwardButton.classList.add('bg-indigo-500', 'text-white', 'shadow-md');
+                    modeForwardButton.classList.remove('text-gray-300');
+                    modeReverseButton.classList.remove('bg-indigo-500', 'text-white', 'shadow-md');
+                    modeReverseButton.classList.add('text-gray-300');
+                } else {
+                    modeReverseButton.classList.add('bg-indigo-500', 'text-white', 'shadow-md');
+                    modeReverseButton.classList.remove('text-gray-300');
+                    modeForwardButton.classList.remove('bg-indigo-500', 'text-white', 'shadow-md');
+                    modeForwardButton.classList.add('text-gray-300');
+                }
+
+                // 2. Update Labels and Button Text
+                if (isForwardMode) {
+                    labelTimeInput.textContent = "Clock In Time (Actual)";
+                    mainCalcButton.textContent = "Calculate Clock Out";
+                    labelRoundedInput.textContent = "Rounded Clock In:";
+                    labelTargetResult.textContent = "Target Clock Out:";
+                    labelResultWindow.textContent = "Clock Out Window (Actual Time):";
+                } else {
+                    labelTimeInput.textContent = "Clock Out Time (Actual)";
+                    mainCalcButton.textContent = "Calculate Clock In";
+                    labelRoundedInput.textContent = "Rounded Clock Out:";
+                    labelTargetResult.textContent = "Target Clock In:";
+                    labelResultWindow.textContent = "Clock In Window (Actual Time):";
+                }
+                
+                // Reset results visibility
+                resultsDiv.classList.add('hidden');
+                hideMessage();
+            }
+
+            function switchMode(isForward) {
+                if (isForwardMode !== isForward) {
+                    isForwardMode = isForward;
+                    updateUIForMode();
+                }
+            }
+
+            // --- Event Handlers ---
+
+            function setClockInToNow() {
+                const now = new Date();
+                // input type="time" requires 24h format HH:MM
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                timeInput.value = `${hours}:${minutes}`;
+            }
+
+            function handleSubmit(event) {
+                event.preventDefault();
+                hideMessage();
+
+                const timeString = timeInput.value;
+                const targetHours = parseFloat(targetHoursInput.value);
+
+                if (!timeString || isNaN(targetHours) || targetHours <= 0) {
+                    showMessage("Please ensure Time is set and Target Hours is greater than zero.", 'error');
+                    return;
+                }
+
+                try {
+                    if (isForwardMode) {
+                        calculateClockOut(timeString, targetHours);
+                    } else {
+                        calculateClockIn(timeString, targetHours);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    showMessage("An unexpected error occurred during calculation. Please check your inputs.", 'error');
+                }
+            }
+            
+            // --- Initialization ---
+            
+            // Set initial mode
+            updateUIForMode(); 
+
+            // Add Listeners
+            form.addEventListener('submit', handleSubmit);
+            setNowButton.addEventListener('click', setClockInToNow);
+            modeForwardButton.addEventListener('click', () => switchMode(true));
+            modeReverseButton.addEventListener('click', () => switchMode(false));
+
+            // --- PWA Service Worker Registration ---
+            if ('serviceWorker' in navigator) {
+                const serviceWorkerContent = `
+                    const CACHE_NAME = 'time-calc-v1';
+                    const urlsToCache = [
+                        '/',
+                        'index.html'
+                    ];
+
+                    self.addEventListener('install', event => {
+                        event.waitUntil(
+                            caches.open(CACHE_NAME)
+                                .then(cache => {
+                                    return cache.addAll(urlsToCache);
+                                })
+                        );
+                    });
+
+                    self.addEventListener('fetch', event => {
+                        event.respondWith(
+                            caches.match(event.request)
+                                .then(response => {
+                                    if (response) {
+                                        return response;
+                                    }
+                                    return fetch(event.request);
+                                })
+                        );
+                    });
+                `;
+                const blob = new Blob([serviceWorkerContent], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+
+                navigator.serviceWorker.register(swUrl, { scope: '/' })
+                    .then(registration => console.log('Service Worker registered (via Blob):', registration.scope))
+                    .catch(error => console.log('Service Worker registration failed:', error));
+            }
+        });
+    </script>
+</body>
+</html>
