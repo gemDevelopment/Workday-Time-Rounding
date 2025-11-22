@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>6-Minute Clock Calculator</title>
+    <!-- Favicon and App Icon Configuration -->
+    <link rel="icon" href="icon.png" type="image/png">
+    
     <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Custom styles for PWA feel and aesthetics */
@@ -195,7 +198,8 @@
 
     </div>
 
-    <!-- PWA Manifest & Service Worker --><link rel="manifest" href="data:application/json;base64,eyJpY29ucyI6IFt7InNyYyI6ICJodHRwczovL3BsYWNlaG9sZC5jby8xOTJ4MTkyLzQ2NGVlN3wvZjNmNGY2P3RleHQ9Q0wiLCJzaXplcyI6ICIxOTJ4MTkyIiwidHlwZSI6ICJpbWFnZS9wbmcifSx7InNyYyI6ICJodHRwczovL3BsYWNlaG9sZC5jby81MTJ4NTEyLzQ2NGVlN3wvZjNmNGY2P3RleHQ9Q0wiLCJzaXplcyI6ICI1MTJ4NTEyIiwidHlwZSI6ICJpbWFnZS9wbmcifV0sIm5hbWUiOiAiNi1NaW51dGUgQ2FsYyIsICJzaG9ydF9uYW1lIjogIjYgTWluIENhbGMiLCAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwgImJhY2tncm91bmRfY29sb3IiOiAiIzFmMjkzNyIsICJ0aGVtZV9jb2xvciI6ICIjNGY0NmU1In0=">
+    <!-- PWA Manifest & Service Worker. Updated to reference 'icon.png' -->
+    <link rel="manifest" href="data:application/json;base64,eyJpY29ucyI6IFt7InNyYyI6ICJpY29uLnBuZyIsICJzaXplcyI6ICIxOTJ4MTkyIiwidHlwZSI6ICJpbWFnZS9wbmcifSx7InNyYyI6ICJpY29uLnBuZyIsICJzaXplcyI6ICI1MTJ4NTEyIiwidHlwZSI6ICJpbWFnZS9wbmcifV0sIm5hbWUiOiAiV29ya2RheSBDbG9jayBDYWxjdWxhdG9yIiwgInNob3J0X25hbWUiOiAiNiBNaW4gQ2FsYyIsICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLCAiYmFja2dyb3VuZHVzZV9jb2xvciI6ICIjMWYyOTM3IiwgInRoZW1lX2NvbG9yIjogIiM0ZjQ2ZTUifQ==">
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -473,7 +477,8 @@
                     const CACHE_NAME = 'time-calc-v1';
                     const urlsToCache = [
                         '/',
-                        'index.html'
+                        'index.html',
+                        'icon.png' // Added icon to cache list
                     ];
 
                     self.addEventListener('install', event => {
