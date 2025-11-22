@@ -7,6 +7,13 @@
     <!-- Favicon and App Icon Configuration -->
     <link rel="icon" href="icon.png" type="image/png">
     
+    <!-- iOS PWA Configuration for Standalone Mode (Crucial for Home Screen app experience) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <!-- Sets the status bar style (optional, but good practice) -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- iOS icon for older devices / primary touch icon -->
+    <link rel="apple-touch-icon" href="icon.png">
+    
     <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Custom styles for PWA feel and aesthetics */
@@ -198,9 +205,9 @@
 
     </div>
 
-    <!-- PWA Manifest & Service Worker. Updated to reference 'icon.png' -->
+    <!-- PWA Manifest & Service Worker. Now referencing the external manifest.json file. -->
     <link rel="manifest" href="manifest.json">
-    
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- DOM References ---
@@ -478,7 +485,8 @@
                     const urlsToCache = [
                         '/',
                         'index.html',
-                        'icon.png' // Added icon to cache list
+                        'icon.png',
+                        'manifest.json' // Added manifest.json to cache list
                     ];
 
                     self.addEventListener('install', event => {
